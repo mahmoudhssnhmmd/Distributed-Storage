@@ -16,7 +16,7 @@ public class User implements UserDetails {
     @GeneratedValue
     private Long id ;
     @Column(nullable = false , unique = true)
-    private String Username ;
+    private String username ;
     @Column(nullable = false, unique = true)
     private String   email;
     @Column(nullable = false)
