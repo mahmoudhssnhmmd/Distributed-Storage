@@ -6,7 +6,11 @@ import org.springframework.web.multipart.MultipartFile;
 import springbootproject.entity.FileMetadata;
 import springbootproject.entity.User;
 import springbootproject.repository.FileMetadataRepository;
-
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,5 +52,22 @@ public class FileService {
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
         return Files.readAllBytes(Paths.get(metadata.getStoragePath()));
+    }
+    public Resource downloadFile(Long fileId) {
+        FileMetadata metadata = fileMetadataRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        try {
+            Path path = Paths.get(metadata.getStoragePath());
+            Resource resource = new UrlResource(path.toUri());
+
+            if (resource.exists()) {
+                return resource;
+            } else {
+                throw new RuntimeException("File not found on disk");
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Error: " + e.getMessage());
+        }
     }
 }
