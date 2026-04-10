@@ -24,9 +24,9 @@ public class User implements UserDetails {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public void prepersist(){
+    @PrePersist
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
-
     }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
