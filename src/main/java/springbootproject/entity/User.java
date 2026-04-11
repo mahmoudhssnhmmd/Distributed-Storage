@@ -45,4 +45,8 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() { return true; }
 
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<FileMetadata> files;
+
 }
