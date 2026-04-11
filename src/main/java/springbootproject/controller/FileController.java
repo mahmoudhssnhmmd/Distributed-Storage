@@ -1,6 +1,8 @@
 package springbootproject.controller;
 
+import jakarta.servlet.ServletContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +13,6 @@ import springbootproject.entity.FileMetadata;
 import springbootproject.entity.User;
 import springbootproject.service.FileService;
 import org.springframework.core.io.Resource;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -19,6 +20,8 @@ import java.util.List;
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
 public class FileController {
+    @Autowired
+    private ServletContext servletContext;
 
     private final FileService fileService;
 
@@ -35,22 +38,26 @@ public class FileController {
         return ResponseEntity.ok(fileService.getUserFiles(owner));
     }
 
-    @GetMapping("/download/{fileId}")
-    public ResponseEntity<byte[]> downloadFile(
-            @PathVariable Long fileId,
-            @AuthenticationPrincipal User owner) throws IOException {
-        byte[] fileBytes = fileService.downloadFile(fileId, owner);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"file\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(fileBytes);
-    }
+
+
     @GetMapping("/download/{id}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long id) {
-        Resource resource = fileService.downloadFile(id);
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long id ,
+                                                 @AuthenticationPrincipal User owner) {
+        Resource resource = fileService.downloadFile(id,owner);
+        String contentType = "application/octet-stream";
+
+        try {
+            String mimeType = servletContext.getMimeType(resource.getFile().getAbsolutePath());
+            if (mimeType != null) {
+                contentType = mimeType;
+            }
+        } catch (IOException ex) {
+
+        }
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
 }

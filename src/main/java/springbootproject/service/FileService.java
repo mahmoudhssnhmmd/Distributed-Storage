@@ -47,27 +47,21 @@ public class FileService {
         return fileMetadataRepository.findByOwner(owner);
     }
 
-    public byte[] downloadFile(Long fileId, User owner) throws IOException {
-        FileMetadata metadata = fileMetadataRepository.findByIdAndOwner(fileId, owner)
-                .orElseThrow(() -> new RuntimeException("File not found"));
 
-        return Files.readAllBytes(Paths.get(metadata.getStoragePath()));
-    }
-    public Resource downloadFile(Long fileId) {
-        FileMetadata metadata = fileMetadataRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
+    public Resource downloadFile(Long id, User owner) {
+        FileMetadata metadata = fileMetadataRepository.findByIdAndOwner(id, owner)
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
 
         try {
             Path path = Paths.get(metadata.getStoragePath());
             Resource resource = new UrlResource(path.toUri());
 
-            if (resource.exists()) {
-                return resource;
-            } else {
-                throw new RuntimeException("File not found on disk");
+            if (!resource.exists()) {
+                throw new RuntimeException("File does not exist on the server");
             }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Error: " + e.getMessage());
+            return resource;
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading file: " + e.getMessage());
         }
     }
 }
