@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import springbootproject.entity.FileMetadata;
 import springbootproject.entity.User;
 import springbootproject.service.FileService;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,5 +44,13 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"file\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(fileBytes);
+    }
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long id) {
+        Resource resource = fileService.downloadFile(id);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 }
