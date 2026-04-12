@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long> {
 
-    List<FileMetadata> findByOwner(User owner);
+    List<FileMetadata> findByUser(User user);
 
-    Optional<FileMetadata> findByIdAndOwner(Long id, User owner);
+    Optional<FileMetadata> findByIdAndUser(Long id, User user);
 }
