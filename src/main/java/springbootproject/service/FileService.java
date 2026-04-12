@@ -38,18 +38,18 @@ public class FileService {
         metadata.setContentType(file.getContentType());
         metadata.setSize(file.getSize());
         metadata.setStoragePath(filePath.toString());
-        metadata.setOwner(owner);
+        metadata.setUser(owner);
 
         return fileMetadataRepository.save(metadata);
     }
 
     public List<FileMetadata> getUserFiles(User owner) {
-        return fileMetadataRepository.findByOwner(owner);
+        return fileMetadataRepository.findByUser(owner);
     }
 
 
     public Resource downloadFile(Long id, User owner) {
-        FileMetadata metadata = fileMetadataRepository.findByIdAndOwner(id, owner)
+        FileMetadata metadata = fileMetadataRepository.findByIdAndUser(id, owner)
                 .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
 
         try {
