@@ -24,8 +24,7 @@ import java.io.IOException;
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
 public class FileController {
-    @Autowired
-    private ServletContext servletContext;
+    private final ServletContext servletContext;
 
     private final FileService fileService;
 
