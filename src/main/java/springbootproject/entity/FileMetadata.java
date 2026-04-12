@@ -25,9 +25,10 @@ public class FileMetadata {
     @Column(nullable = false)
     private String storagePath;
 
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User owner;
+    private User user;
 
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
@@ -36,7 +37,4 @@ public class FileMetadata {
     public void prePersist() {
         this.uploadedAt = LocalDateTime.now();
     }
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
 }
