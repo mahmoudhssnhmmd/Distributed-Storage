@@ -3,6 +3,7 @@ package springbootproject.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "files")
@@ -21,7 +22,7 @@ public class FileMetadata {
 
     @Column(nullable = false)
     private Long size;
-
+    @JsonIgnore
     @Column(nullable = false)
     private String storagePath;
 
