@@ -1,6 +1,8 @@
 package springbootproject.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import springbootproject.entity.FileMetadata;
@@ -8,13 +10,10 @@ import springbootproject.entity.User;
 import springbootproject.repository.FileMetadataRepository;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +44,35 @@ public class FileService {
 
     public List<FileMetadata> getUserFiles(User owner) {
         return fileMetadataRepository.findByUser(owner);
+    }
+
+    public Page<FileMetadata> getUserFiles(User owner, Pageable pageable) {
+        return fileMetadataRepository.findByUser(owner, pageable);
+    }
+
+    public FileMetadata renameFile(Long id, String newFilename, User owner) {
+        if (newFilename == null || newFilename.trim().isEmpty()) {
+            throw new IllegalArgumentException("Filename cannot be blank");
+        }
+
+        FileMetadata metadata = fileMetadataRepository.findByIdAndUser(id, owner)
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+
+        metadata.setFilename(newFilename.trim());
+        return fileMetadataRepository.save(metadata);
+    }
+
+    public void deleteFile(Long id, User owner) {
+        FileMetadata metadata = fileMetadataRepository.findByIdAndUser(id, owner)
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+
+        try {
+            Files.deleteIfExists(Paths.get(metadata.getStoragePath()));
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to delete file from storage");
+        }
+
+        fileMetadataRepository.delete(metadata);
     }
 
 
