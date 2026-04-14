@@ -1,12 +1,13 @@
 package springbootproject.controller;
 
 import jakarta.servlet.ServletContext;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,16 +18,31 @@ import springbootproject.dto.RenameFileRequest;
 import springbootproject.entity.FileMetadata;
 import springbootproject.entity.User;
 import springbootproject.service.FileService;
-import org.springframework.core.io.Resource;
 import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
 public class FileController {
-    private final ServletContext servletContext;
+    private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
+    private final ServletContext servletContext;
     private final FileService fileService;
+
+    private void validatePagination(int page, int size) {
+        if (page < 0 || size <= 0) {
+            throw new IllegalArgumentException("Invalid pagination values");
+        }
+    }
+
+    private Sort resolveSort(String sortBy, String direction) {
+        if (!"asc".equalsIgnoreCase(direction) && !"desc".equalsIgnoreCase(direction)) {
+            throw new IllegalArgumentException("direction must be 'asc' or 'desc'");
+        }
+        return "asc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<FileMetadata> uploadFile(
@@ -42,22 +58,16 @@ public class FileController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "uploadedAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction) {
-        if (page < 0 || size <= 0) {
-            throw new IllegalArgumentException("Invalid pagination values");
-        }
-
-        Sort sort = "asc".equalsIgnoreCase(direction)
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+        validatePagination(page, size);
+        Sort sort = resolveSort(sortBy, direction);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return ResponseEntity.ok(fileService.getUserFiles(owner, pageable));
     }
 
-
     @PatchMapping("/{id}/rename")
     public ResponseEntity<FileMetadata> renameFile(@PathVariable Long id,
-                                                   @RequestBody RenameFileRequest request,
+                                                   @Valid @RequestBody RenameFileRequest request,
                                                    @AuthenticationPrincipal User owner) {
         return ResponseEntity.ok(fileService.renameFile(id, request.getFilename(), owner));
     }
@@ -69,21 +79,15 @@ public class FileController {
         return ResponseEntity.noContent().build();
     }
 
-
-
     @GetMapping("/download/{id}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long id ,
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long id,
                                                  @AuthenticationPrincipal User owner) {
-        Resource resource = fileService.downloadFile(id,owner);
-        String contentType = "application/octet-stream";
+        Resource resource = fileService.downloadFile(id, owner);
+        String contentType = DEFAULT_CONTENT_TYPE;
 
-        try {
-            String mimeType = servletContext.getMimeType(resource.getFile().getAbsolutePath());
-            if (mimeType != null) {
-                contentType = mimeType;
-            }
-        } catch (IOException ex) {
-
+        String mimeType = servletContext.getMimeType(resource.getFilename());
+        if (mimeType != null) {
+            contentType = mimeType;
         }
 
         return ResponseEntity.ok()
