@@ -2,13 +2,18 @@ package springbootproject.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "files")
 @Data
-public class FileMetadata {
+public class FileMetadata implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,6 +33,7 @@ public class FileMetadata {
 
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
