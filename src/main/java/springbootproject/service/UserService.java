@@ -14,19 +14,33 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
+    private String normalizeUsername(String username) {
+        return username.trim();
+    }
 
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase();
+    }
+
+    private User buildUser(String username, String email, String rawPassword) {
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        return user;
+    }
 
-        return userRepository.save(user);
+    public User register(RegisterRequest request) {
+        String username = normalizeUsername(request.getUsername());
+        String email = normalizeEmail(request.getEmail());
+
+        if (userRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        return userRepository.save(buildUser(username, email, request.getPassword()));
     }
 }
