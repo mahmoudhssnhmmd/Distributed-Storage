@@ -29,16 +29,16 @@ This project is my backend file-storage API built with Spring Boot. I wanted it 
 ### 1) Run locally
 
 ```zsh
-cd /home/mahmoudhssnhmmd/IdeaProjects/springbootProject
-export JAVA_HOME=/home/mahmoudhssnhmmd/.jdks/openjdk-26
-export PATH="$JAVA_HOME/bin:$PATH"
+cd springbootProject
+# export JAVA_HOME=/path/to/your/jdk
+# export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw spring-boot:run
 ```
 
 ### 2) Or use Makefile shortcuts
 
 ```zsh
-cd /home/mahmoudhssnhmmd/IdeaProjects/springbootProject
+cd springbootProject
 make help
 make test
 make run
@@ -47,7 +47,7 @@ make run
 ### 3) Run full Docker stack
 
 ```zsh
-cd /home/mahmoudhssnhmmd/IdeaProjects/springbootProject
+cd springbootProject
 cp .env.example .env
 # edit .env with real credentials/secrets
 docker compose up --build
@@ -56,7 +56,7 @@ docker compose up --build
 ### 4) Run with scaling (distributed mode)
 
 ```zsh
-cd /home/mahmoudhssnhmmd/IdeaProjects/springbootProject
+cd springbootProject
 docker compose up --build --scale app=2
 ```
 
@@ -135,9 +135,9 @@ Recommended order:
 Tests run on `test` profile (H2 + isolated test storage path).
 
 ```zsh
-cd /home/mahmoudhssnhmmd/IdeaProjects/springbootProject
-export JAVA_HOME=/home/mahmoudhssnhmmd/.jdks/openjdk-26
-export PATH="$JAVA_HOME/bin:$PATH"
+cd springbootProject
+# export JAVA_HOME=/path/to/your/jdk
+# export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw test
 ```
 
