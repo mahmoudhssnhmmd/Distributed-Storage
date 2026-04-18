@@ -1,148 +1,181 @@
-# Distributed Storage API (Spring Boot)
-
-Hi, I am Mahmoud.
-
-This project is my backend file-storage API built with Spring Boot. I wanted it to be practical, not just a demo, so it includes authentication, file operations, tests, Docker setup, and a distributed-ready runtime using Redis + Nginx.
-
-## What This Project Does
-
-- JWT authentication (`register` / `login`)
-- File upload, list (with pagination), rename, download, and delete
-- Spring Security protection for private routes
-- Swagger OpenAPI docs with Bearer token support
-- Centralized error handling and validation
-- Integration tests for auth and file flow
-
+# Distributed Storage System
+ 
+A production-grade distributed file storage system built with **Java 17** and **Spring Boot 3.5**, modeled after core Google Drive functionality. Supports secure file upload, download, rename, and deletion with JWT-based authentication and Redis caching.
+ 
+---
+ 
+## Features
+ 
+- **JWT Authentication** — Stateless, token-based auth using Spring Security. No sessions.
+- **File Management** — Upload, download, rename, and delete files per authenticated user.
+- **Redis Caching** — Paginated file listings are cached and automatically invalidated on write operations.
+- **Pagination & Sorting** — Query files with configurable page size, sort field, and direction.
+- **Input Validation** — Request validation via Spring `@Valid` with global exception handling.
+- **API Documentation** — Interactive Swagger UI via SpringDoc OpenAPI.
+- **Integration Tests** — Auth and file operation flows tested with Spring Boot Test + H2 in-memory DB.
+---
+ 
 ## Tech Stack
-
+ 
+| Layer | Technology |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 3.5 |
+| Security | Spring Security + JWT (jjwt 0.11.5) |
+| Database | PostgreSQL + Spring Data JPA |
+| Cache | Redis (Spring Cache) |
+| Build | Maven |
+| Docs | SpringDoc OpenAPI / Swagger UI |
+| Testing | JUnit 5, Spring Boot Test, H2 |
+| Utilities | Lombok |
+ 
+---
+## Project Structure
+ 
+```
+src/main/java/springbootproject/
+├── config/
+│   ├── JwtAuthenticationFilter.java   # Intercepts requests and validates JWT tokens
+│   ├── SecurityConfig.java            # Security rules and filter chain configuration
+│   └── SwaggerConfig.java             # OpenAPI documentation setup
+├── controller/
+│   ├── AuthController.java            # /api/auth/register and /api/auth/login
+│   └── FileController.java            # /api/files — upload, list, rename, delete, download
+├── dto/
+│   ├── AuthResponse.java
+│   ├── LoginRequest.java
+│   ├── RegisterRequest.java
+│   └── RenameFileRequest.java
+├── entity/
+│   ├── User.java                      # Implements UserDetails for Spring Security
+│   └── FileMetadata.java              # File record stored in PostgreSQL
+├── exception/
+│   ├── ErrorResponse.java
+│   └── GlobalExceptionHandler.java    # Centralized error handling
+├── repository/
+│   ├── UserRepository.java
+│   └── FileMetadataRepository.java
+└── service/
+    ├── JwtService.java                # Token generation, validation, claims extraction
+    ├── UserService.java               # Registration logic and user creation
+    ├── CustomUserDetailsService.java  # Loads user from DB for Spring Security
+    └── FileService.java               # Core file operations with caching
+```
+ 
+---
+ 
+## Getting Started
+ 
+### Prerequisites
+ 
 - Java 17+
-- Spring Boot 3.5.x
-- Spring Security + JWT (`jjwt`)
-- Spring Data JPA + PostgreSQL
-- Redis cache
-- Nginx (reverse proxy / load balancer)
-- H2 for tests
+- PostgreSQL
+- Redis
 - Maven
-
-## Quick Start
-
-### 1) Run locally
-
-```zsh
-cd springbootProject
-# export JAVA_HOME=/path/to/your/jdk
-# export PATH="$JAVA_HOME/bin:$PATH"
+### 1. Clone the repository
+ 
+```bash
+git clone https://github.com/mahmoudhssnhmmd/Distributed-Storage.git
+cd Distributed-Storage
+```
+ 
+### 2. Configure environment
+ 
+Create `src/main/resources/application.properties`:
+ 
+```properties
+# Database
+spring.datasource.url=jdbc:postgresql://localhost:5432/distributed_storage
+spring.datasource.username=your_db_user
+spring.datasource.password=your_db_password
+spring.jpa.hibernate.ddl-auto=update
+ 
+# JWT
+jwt.secret=your_secret_key_minimum_256_bits
+jwt.expiration=86400000
+ 
+# Redis
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+ 
+# File Storage
+app.storage.dir=uploads
+```
+ 
+### 3. Run the application
+ 
+```bash
 ./mvnw spring-boot:run
 ```
-
-### 2) Or use Makefile shortcuts
-
-```zsh
-cd springbootProject
-make help
-make test
-make run
+ 
+### 4. Access Swagger UI
+ 
 ```
-
-### 3) Run full Docker stack
-
-```zsh
-cd springbootProject
-cp .env.example .env
-# edit .env with real credentials/secrets
-docker compose up --build
+http://localhost:8080/swagger-ui.html
 ```
-
-### 4) Run with scaling (distributed mode)
-
-```zsh
-cd springbootProject
-docker compose up --build --scale app=2
-```
-
-Nginx listens on `http://localhost:8080` and forwards requests across app replicas.
-
-## Environment Variables
-
-Configured in `.env` (template available in `.env.example`):
-
-- `SPRING_DATASOURCE_URL`
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
-- `JWT_SECRET`
-- `JWT_EXPIRATION`
-- `APP_STORAGE_DIR`
-
-## API Documentation
-
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-
-## Main Endpoints
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/files/upload`
-- `GET /api/files?page=0&size=10&sortBy=uploadedAt&direction=desc`
-- `PATCH /api/files/{id}/rename`
-- `GET /api/files/download/{id}`
-- `DELETE /api/files/{id}`
-
-## Internal Architecture (Package Layout)
-
-The internal code structure is layered and simple:
-
-- `src/main/java/springbootproject/config`
-  - Security, JWT filter, Swagger configuration
-- `src/main/java/springbootproject/controller`
-  - API endpoints (`AuthController`, `FileController`)
-- `src/main/java/springbootproject/dto`
-  - Request/response payload models
-- `src/main/java/springbootproject/service`
-  - Business logic (`UserService`, `FileService`, `JwtService`)
-- `src/main/java/springbootproject/repository`
-  - JPA repositories for DB access
-- `src/main/java/springbootproject/entity`
-  - Database entities (`User`, `FileMetadata`)
-- `src/main/java/springbootproject/exception`
-  - Global exception handling and error response model
-
-### Request Flow
-
-1. Request enters `controller`
-2. DTO validation runs
-3. `service` handles business logic
-4. `repository` talks to database
-5. response returns from `controller`
-6. errors are handled centrally by `GlobalExceptionHandler`
-
-## API Client (Postman)
-
-Import from `postman/`:
-
-- `postman/Distributed-Storage.postman_collection.json`
-- `postman/Distributed-Storage.local.postman_environment.json`
-
-Recommended order:
-
-1. `Auth -> Register`
-2. `Auth -> Login` (stores `token` automatically)
-3. `Files -> Upload` (stores `fileId` automatically)
-4. Use list/rename/download/delete
-
-## Tests
-
-Tests run on `test` profile (H2 + isolated test storage path).
-
-```zsh
-cd springbootProject
-# export JAVA_HOME=/path/to/your/jdk
-# export PATH="$JAVA_HOME/bin:$PATH"
+ 
+---
+ 
+## API Endpoints
+ 
+### Auth
+ 
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Login and receive a JWT token |
+ 
+### Files (require `Authorization: Bearer <token>`)
+ 
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/files/upload` | Upload a file |
+| GET | `/api/files` | List files (paginated) |
+| GET | `/api/files/download/{id}` | Download a file |
+| PATCH | `/api/files/{id}/rename` | Rename a file |
+| DELETE | `/api/files/{id}` | Delete a file |
+ 
+**Pagination query params for GET `/api/files`:**
+ 
+| Param | Default | Description |
+|---|---|---|
+| `page` | `0` | Page number |
+| `size` | `10` | Items per page |
+| `sortBy` | `uploadedAt` | Field to sort by |
+| `direction` | `desc` | `asc` or `desc` |
+ 
+---
+ 
+## How Authentication Works
+ 
+1. User registers and logs in via `/api/auth/login`
+2. Server returns a signed JWT token
+3. Client sends the token in every request: `Authorization: Bearer <token>`
+4. `JwtAuthenticationFilter` intercepts the request, validates the token, and loads the user from the database
+5. Spring Security grants access based on the authenticated user
+---
+ 
+## Running Tests
+ 
+```bash
 ./mvnw test
 ```
-
-## Notes
-
-- This project is currently a strong monolith.
-- Next planned evolution is modularization, then microservices/event-driven architecture.
-
+ 
+Tests use an in-memory H2 database and cover registration, login, and full file operation flows.
+ 
+---
+ 
+## Planned Features (Phase 2)
+ 
+- [ ] Apache Kafka integration for async file event processing
+- [ ] Docker & Docker Compose setup for containerized deployment
+- [ ] Jenkins CI/CD pipeline
+- [ ] File sharing between users
+- [ ] apply design principles (SOLID, Design Patterns)
+---
+ 
+## Author
+ 
+**Mahmoud Hammad**
+[GitHub](https://github.com/mahmoudhssnhmmd) · [LinkedIn](https://linkedin.com)
+ 
