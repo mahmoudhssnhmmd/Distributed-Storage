@@ -1,4 +1,4 @@
-# Distributed Storage System
+# Distributed Storage System (under development)
  
 A production-grade distributed file storage system built with **Java 17** and **Spring Boot 3.5**, modeled after core Google Drive functionality. Supports secure file upload, download, rename, and deletion with JWT-based authentication and Redis caching.
  
