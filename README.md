@@ -80,27 +80,30 @@ cd Distributed-Storage
 ```
  
 ### 2. Configure environment
- 
-Create `src/main/resources/application.properties`:
- 
-```properties
-# Database
-spring.datasource.url=jdbc:postgresql://localhost:5432/distributed_storage
-spring.datasource.username=your_db_user
-spring.datasource.password=your_db_password
-spring.jpa.hibernate.ddl-auto=update
- 
-# JWT
-jwt.secret=your_secret_key_minimum_256_bits
-jwt.expiration=86400000
- 
-# Redis
-spring.data.redis.host=localhost
-spring.data.redis.port=6379
- 
-# File Storage
-app.storage.dir=uploads
+
+The project reads sensitive values from environment variables.
+
+Create a local `.env` file from the template:
+
+```bash
+cp .env.example .env
 ```
+
+Then edit `.env` with your own values:
+
+```dotenv
+# Database credentials
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=your_real_password
+
+# JWT secret
+JWT_SECRET=replace_with_a_long_random_secret
+
+# Optional: storage dir (local run)
+APP_STORAGE_DIR=uploads
+```
+
+If needed, you can also override the datasource URL (default: `jdbc:postgresql://localhost:5432/distributed-storage`) via `SPRING_DATASOURCE_URL`.
  
 ### 3. Run the application
  
@@ -160,8 +163,8 @@ http://localhost:8080/swagger-ui.html
 ```bash
 ./mvnw test
 ```
- 
-Tests use an in-memory H2 database and cover registration, login, and full file operation flows.
+
+Make sure your database credentials are valid in `.env` because Spring context tests require a working datasource.
  
 ---
  
